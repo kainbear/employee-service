@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres-users:
+    image: postgres:16
+    container_name: postgres-users
+    environment:
+      POSTGRES_USER: kainbear
+      POSTGRES_PASSWORD: sups4
+      POSTGRES_DB: users
+    volumes:
+      - postgres-users-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  postgres-tasks:
+    image: postgres:16
+    container_name: postgres-tasks
+    environment:
+      POSTGRES_USER: kainbear
+      POSTGRES_PASSWORD: sups4
+      POSTGRES_DB: tasks
+    volumes:
+      - postgres-tasks-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+  
+  user-service:
+    image: kxinbexr/user-service:latest
+    container_name: user-service
+    ports:
+      - "44444:8003"
+    environment:
+      - DATABASE_URL=postgresql://kainbear:sups4@postgres-users:5432/users
+    depends_on:
+      - postgres-users
+
+  task-service:
+    image: kxinbexr/task-service:latest
+    container_name: task-service
+    ports:
+      - "44445:8002"
+    environment:
+      - DATABASE_URL=postgresql://kainbear:sups4@postgres-tasks:5432/tasks
+    depends_on:
+      - postgres-tasks
+      - user-service
+
+  interface-service:
+    image: kxinbexr/interface-service:latest
+    container_name: interface-service
+    ports:
+      - "44446:8000"
+    depends_on:
+      - user-service
+      - task-service
+
+volumes:
+  postgres-users-data:
+  postgres-tasks-data:
